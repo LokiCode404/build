@@ -413,6 +413,20 @@ for row in $(jq -r '.[] | @base64' ../cores.json); do
             cp EmulatorJS/data/cores/$name-thread-legacy-wasm.data $outputPath
         fi
 
+        # blueMSX requires Machines/ and Databases/ at runtime. The C-BIOS
+        # variants in these directories use freely redistributable ROMs so
+        # they can be packaged directly into the core archive.
+        if [ "$name" = "bluemsx" ]; then
+            echo "Adding system files (Machines + Databases) to bluemsx core archives..."
+            cd "$compileStartPath/$name/system/bluemsx"
+            for datafile in "$compileStartPath/EmulatorJS/data/cores/bluemsx"*.data; do
+                if [ -f "$datafile" ]; then
+                    7z a -t7z "$datafile" ./Machines ./Databases
+                fi
+            done
+            cd "$compileStartPath"
+        fi
+
         # create zip file containing the core data files
         cd EmulatorJS/data/cores
         zip $outputPath/$name.zip $name-thread*wasm.data
